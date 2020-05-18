@@ -7,6 +7,6 @@ message(STATUS "Building for x86-64 Linux")
 include("cmake/buildtool/config/config_linux.cmake")
 
 # SIMD for x86
-set(FLAGS_COMMON ${FLAGS_COMMON}
-    "-msse4"
-    )
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    set(FLAGS_COMMON ${FLAGS_COMMON} "-msse4")
+endif()
