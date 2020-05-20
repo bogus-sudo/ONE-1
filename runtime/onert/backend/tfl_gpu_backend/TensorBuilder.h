@@ -36,26 +36,31 @@ namespace tfl_gpu
 class TensorBuilder : public ITensorBuilder
 {
 public:
-  bool supportDynamicTensor() override { return false; }
+  bool supportDynamicTensor() final { return false; }
 
-  void registerTensorInfo(const ir::OperandIndex &ind, const ir::OperandInfo &info, ir::Layout backend_layout, bool as_const) override {}
+  void registerTensorInfo(const ir::OperandIndex &ind, const ir::OperandInfo &info, ir::Layout backend_layout, bool as_const) final;
 
-  void notifyFirstUse(const ir::OperandIndex &) override {}
-  void notifyLastUse(const ir::OperandIndex &) override {}
+  void notifyFirstUse(const ir::OperandIndex &) final {}
+  void notifyLastUse(const ir::OperandIndex &) final {}
 
-  bool isRegistered(const ir::OperandIndex &) const override { return false; }
+  bool isRegistered(const ir::OperandIndex &index) const final { return _info_about_operands.find(index) != _info_about_operands.end(); }
 
-  void prepare(void) override {}
-  void allocate() override {}
-  void postFunctionPrepare() override {}
+  void prepare(void) final {}
+  void allocate() final {}
+  void postFunctionPrepare() final {}
 
-  std::shared_ptr<ITensor> tensorAt(const ir::OperandIndex &ind) override { return nullptr; }
+  std::shared_ptr<ITensor> tensorAt(const ir::OperandIndex &ind) final { return _info_about_operands[ind]; }
 
-  void iterate(const IterateFunction &fn) override {}
+  void iterate(const IterateFunction &fn) final {}
 
-  std::unique_ptr<ITensorManager> releaseStaticTensorManager(void) override { return nullptr; }
+  std::unique_ptr<ITensorManager> releaseStaticTensorManager(void) final { return nullptr; }
 
-  std::shared_ptr<operand::Tensor> at(const ir::OperandIndex &ind) { return nullptr; }
+  std::shared_ptr<operand::Tensor> at(const ir::OperandIndex &ind) { return _info_about_operands[ind]; }
+
+private:
+  std::unordered_map<ir::OperandIndex, std::shared_ptr<operand::Tensor>> _info_about_operands;
+  std::unordered_map<ir::OperandIndex, ir::Layout> _info_about_backend_layout;
+  std::unordered_map<ir::OperandIndex, bool> _info_about_constants;
 };
 
 } // namespace tfl_gpu

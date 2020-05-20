@@ -26,8 +26,10 @@
 
 namespace onert
 {
+
 namespace backend
 {
+
 namespace tfl_gpu
 {
 
@@ -43,6 +45,10 @@ public:
   {}
 
   using IKernelGenerator::visit;
+
+  void visit(const ir::OpSequence &operations_sequence) final;
+
+  void visit(const ir::operation::Conv2D& node) final;
 
 private:
   const ir::Operands &_ctx;

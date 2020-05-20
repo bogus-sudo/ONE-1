@@ -24,10 +24,19 @@ if(NOT TensorFlowLite2_FOUND)
     return()
 endif(NOT TensorFlowLite2_FOUND)
 
+
+list(APPEND tfl_gpu_srcs kernel/operation_traits.cc)
+list(APPEND tfl_gpu_srcs kernel/nnfw_operation_as_tflite_model.cc)
+list(APPEND tfl_gpu_srcs TensorBuilder.cc)
+list(APPEND tfl_gpu_srcs kernel/Kernel.cc)
+list(APPEND tfl_gpu_srcs KernelGenerator.cc)
 list(APPEND tfl_gpu_srcs tfl_gpu.cc)
 add_library(backend_tfl_gpu SHARED ${tfl_gpu_srcs})
 target_link_libraries(backend_tfl_gpu PUBLIC onert_core)
+target_link_libraries(backend_tfl_gpu PRIVATE tensorflow-lite2)
 
 add_subdirectory(tests)
 
 install(TARGETS backend_tfl_gpu DESTINATION lib)
+install(FILES ${EXT_OVERLAY_DIR}/lib/libtensorflowlite.so DESTINATION lib)
+install(FILES ${EXT_OVERLAY_DIR}/lib/libtensorflowlite_gpu_delegate.so DESTINATION lib)

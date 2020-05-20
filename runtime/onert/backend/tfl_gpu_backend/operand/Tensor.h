@@ -18,6 +18,7 @@
 #define NNFW_TFL_GPU_TENSOR_H
 
 #include <backend/ITensor.h>
+#include <ir/OperandInfo.h>
 
 namespace onert
 {
@@ -37,24 +38,40 @@ public:
   Tensor() = delete;
 
 public:
-  Tensor(const ir::OperandInfo& info) {}
+  Tensor(const onert::ir::OperandInfo& info)
+    : _dimensions(info.shape().dims())
+    , _total_size(info.total_size())
+    , _type(info.typeInfo().type())
+  {}
 
 public:
-  uint8_t *buffer() const override { return nullptr; }
-  size_t dimension(size_t index) const override { return 0; }
-  size_t num_dimensions() const override { return 0; }
-  size_t total_size() const override { return 0; }
-  size_t calcOffset(const ir::Coordinates &coords) const override { return 0; }
-  ir::Layout layout() const override { return ir::Layout::NHWC; }
-  ir::DataType data_type() const override { return ir::DataType::FLOAT32; }
-  bool has_padding() const override { return false; }
-  void access(const std::function<void(ITensor &tensor)> &fn) final {}
-  bool is_dynamic() const override { return false; }
-  void set_dynamic() override {}
+  uint8_t *buffer() const final { return _data; }
+  size_t dimension(size_t index) const final { return _dimensions.at(index); }
+  size_t num_dimensions() const final { return _dimensions.size(); }
+  size_t total_size() const final { return _total_size; }
+  size_t calcOffset(const ir::Coordinates &coords) const final {
+    size_t rank = num_dimensions();
+    size_t offset = 0;
+    for (size_t i = 0; i < rank; ++i)
+    {
+      offset = offset * dimension(i) + coords[i];
+    }
+    offset *= sizeOfDataType(data_type());
+    return offset;
+  }
+  ir::Layout layout() const final { return ir::Layout::NHWC; }
+  ir::DataType data_type() const final { return _type; }
+  bool has_padding() const final { return false; }
+  void access(const std::function<void(ITensor &tensor)> &fn) final { fn(*this); }
 
-  void dimension(size_t index, size_t dim) override {}
+  void setBuffer(uint8_t* p) { _data = p; }
+  const std::vector<int32_t>& dimensions() const { return _dimensions; }
 
-  void num_dimensions(size_t rank) override {}
+private:
+  std::vector<int32_t> _dimensions;
+  size_t _total_size;
+  ir::DataType _type;
+  uint8_t* _data = nullptr;
 };
 
 } // namespace operand

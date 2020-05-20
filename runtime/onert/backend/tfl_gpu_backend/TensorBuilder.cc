@@ -14,42 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef NNFW_TFL_GPU_SHAPE_FIXER_H
-#define NNFW_TFL_GPU_SHAPE_FIXER_H
-
 #include "TensorBuilder.h"
-#include "operand/Tensor.h"
 
-#include <backend/IShapeFixer.h>
-#include <ir/Operands.h>
-
-#include <ir/operation/Conv2D.h>
 
 namespace onert
 {
+
 namespace backend
 {
+
 namespace tfl_gpu
 {
 
-class ShapeFixer : public IShapeFixer
-{
-public:
-  ShapeFixer(const ir::Operands &ctx): _ctx(ctx) {}
-
-  using IShapeFixer::visit;
-
-  void visit(const ir::operation::Conv2D&) final {}
-
-
-private:
-  const ir::Operands &_ctx;
-};
+void TensorBuilder::registerTensorInfo(const ir::OperandIndex &ind, const ir::OperandInfo &info, ir::Layout backend_layout, bool as_const) {
+  _info_about_operands[ind] = std::make_shared<operand::Tensor>(info);
+  _info_about_backend_layout[ind] = backend_layout;
+  _info_about_constants[ind] = as_const;
+}
 
 } // namespace tfl_gpu
 
 } // namespace backend
 
 } // namespace onert
-
-#endif // NNFW_TFL_GPU_SHAPE_FIXER_H

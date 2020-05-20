@@ -22,7 +22,7 @@
 #include "data_comparison.h"
 
 
-TEST_F(TflGpuBackendTest, model_with_just_one_ReLU_can_be_evalueated_on_tfl_gpu_bakend) {
+TEST_F(TflGpuBackendTest, model_with_just_one_Conv2D_can_be_evalueated_on_tfl_gpu_bakend) {
   auto nnfw_ir = makeModelWithJustOneConvolution2DOperation();
 
   NNFWRuntime nnfw_runtime1;
