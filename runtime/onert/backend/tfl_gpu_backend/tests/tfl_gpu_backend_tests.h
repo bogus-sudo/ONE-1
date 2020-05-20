@@ -22,6 +22,8 @@
 
 
 struct TflGpuBackendTest: public testing::Test {
+  std::string platform;
+
   void SetUp() override;
 
   void TearDown() override {

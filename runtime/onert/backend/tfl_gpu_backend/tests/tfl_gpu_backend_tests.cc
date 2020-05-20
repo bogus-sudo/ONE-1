@@ -26,7 +26,13 @@ TEST_F(TflGpuBackendTest, model_with_just_one_Conv2D_can_be_evalueated_on_tfl_gp
   auto nnfw_ir = makeModelWithJustOneConvolution2DOperation();
 
   NNFWRuntime nnfw_runtime1;
-  nnfw_runtime1.doCalculationsUsingCpuBackend();
+  if (platform == "x86_64-linux") {
+    nnfw_runtime1.doCalculationsUsingCpuBackend();
+  }
+  else {
+    nnfw_runtime1.doCalculationsUsingAclNeonBackend();
+  }
+
   nnfw_runtime1.loadGraph(nnfw_ir);
   NNFWRuntime nnfw_runtime2;
   nnfw_runtime2.doCalculationsUsingTflGpuBackend();
@@ -50,7 +56,6 @@ TEST_F(TflGpuBackendTest, model_with_just_one_Conv2D_can_be_evalueated_on_tfl_gp
     ASSERT_TRUE(isAlmostEqual(nnfw_runtime1.getDataOfOutput(i), nnfw_runtime2.getDataOfOutput(i), 10e-5));
   }
 }
-
 
 
 int main(int argc, char *argv[])

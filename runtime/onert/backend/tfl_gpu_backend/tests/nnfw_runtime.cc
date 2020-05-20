@@ -30,6 +30,10 @@ void NNFWRuntime::doCalculationsUsingCpuBackend() {
   setenv("OP_BACKEND_ALLOPS", "cpu", 1);
 }
 
+void NNFWRuntime::doCalculationsUsingAclNeonBackend() {
+  setenv("OP_BACKEND_ALLOPS", "acl_neon", 1);
+}
+
 void NNFWRuntime::doCalculationsUsingTflGpuBackend() {
   std::cout << "set up tfl_gpu backend" << std::endl;
   setenv("OP_BACKEND_ALLOPS", "tfl_gpu", 1);

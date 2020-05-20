@@ -43,6 +43,7 @@ public:
   NNFWRuntime();
 
   void doCalculationsUsingCpuBackend();
+  void doCalculationsUsingAclNeonBackend();
   void doCalculationsUsingTflGpuBackend();
 
   void loadGraph(std::shared_ptr<onert::ir::Graph> new_graph);
