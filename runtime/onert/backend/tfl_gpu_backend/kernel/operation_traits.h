@@ -20,6 +20,8 @@
 #include "ir/Index.h"
 
 #include "../operand/Tensor.h"
+#include "tensorflow/lite/schema/schema_generated.h"
+
 
 #include <vector>
 #include <cstdint>
@@ -82,7 +84,7 @@ public:
   void addConstantInput(const OperandTraits& traits) { traits_of_constant_inputs.push_back(traits); }
   void addOutput(const OperandTraits& traits) { traits_of_outputs.push_back(traits); }
 
-  void setOperationSpecificTraits(const onert::ir::Operation& operation);
+  void setOperationSpecificTraits(std::unique_ptr<class OperationSpecificTraitsProvider> specific_traits_provider);
 
   int64_t operationCode() const;
   int64_t operationOptionsCode() const;

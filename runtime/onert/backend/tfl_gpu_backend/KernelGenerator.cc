@@ -18,6 +18,7 @@
 
 #include "kernel/Kernel.h"
 #include "kernel/operation_traits.h"
+#include "kernel/operation_specific_traits_provider.h"
 
 namespace onert
 {
@@ -45,9 +46,17 @@ void KernelGenerator::visit(const ir::operation::Conv2D& node)
   using ir::operation::Conv2D;
 
   OperationTraits operation_traits;
-  operation_traits.setOperationSpecificTraits(node);
+  operation_traits.setOperationSpecificTraits(std::make_unique<Conv2dSpecificTraitsProvider>(node.param()));
 
+  configureInputsAndOutputs(node, operation_traits);
 
+  auto fn = std::make_unique<::onert::backend::tfl_gpu::kernel::Kernel>(operation_traits);
+  shareInternallyAllocatedBuffers(node, *fn);
+
+  _return_fn = std::move(fn);
+}
+
+void KernelGenerator::configureInputsAndOutputs(const onert::ir::Operation &node, OperationTraits &operation_traits) {
   for (size_t i = 0; i < node.getInputs().size(); ++i) {
     auto operand_index_in_ir = node.getInputs().at(i);
     if (!_tensor_builder->isRegistered(operand_index_in_ir)) {
@@ -71,18 +80,19 @@ void KernelGenerator::visit(const ir::operation::Conv2D& node)
     auto tensor = _tensor_builder->at(operand_index_in_ir);
     operation_traits.addOutput(OperandTraits::ForNonConstantFrom(tensor));
   }
+}
 
-  auto fn = std::make_unique<::onert::backend::tfl_gpu::kernel::Kernel>(operation_traits);
+void KernelGenerator::shareInternallyAllocatedBuffers(const onert::ir::Operation& node, onert::backend::tfl_gpu::kernel::Kernel& fn) {
   for (size_t i = 0; i < node.getInputs().size(); ++i) {
     auto operand_index_in_ir = node.getInputs().at(i);
-    fn->shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
+    fn.shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
   }
   for (size_t i = 0; i < node.getOutputs().size(); ++i) {
     auto operand_index_in_ir = node.getOutputs().at(i);
-    fn->shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
+    fn.shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
   }
-  _return_fn = std::move(fn);
 }
+
 
 } // namespace tfl_gpu
 

@@ -20,9 +20,12 @@
 #include "TensorBuilder.h"
 #include "operand/Tensor.h"
 
-#include <backend/CustomKernelBuilder.h>
-#include <backend/IKernelGenerator.h>
-#include <ir/Operands.h>
+#include "backend/CustomKernelBuilder.h"
+#include "backend/IKernelGenerator.h"
+#include "ir/Operands.h"
+
+
+class OperationTraits;
 
 namespace onert
 {
@@ -32,6 +35,10 @@ namespace backend
 
 namespace tfl_gpu
 {
+
+namespace kernel {
+  class Kernel;
+}
 
 class KernelGenerator : public IKernelGenerator
 {
@@ -49,6 +56,10 @@ public:
   void visit(const ir::OpSequence &operations_sequence) final;
 
   void visit(const ir::operation::Conv2D& node) final;
+
+private:
+  void configureInputsAndOutputs(const onert::ir::Operation& node, OperationTraits& operation_traits);
+  void shareInternallyAllocatedBuffers(const onert::ir::Operation& operation, class kernel::Kernel& kernel);
 
 private:
   const ir::Operands &_ctx;

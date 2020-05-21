@@ -25,6 +25,7 @@ if(NOT TensorFlowLite2_FOUND)
 endif(NOT TensorFlowLite2_FOUND)
 
 
+list(APPEND tfl_gpu_srcs kernel/operation_specific_traits_provider.cc)
 list(APPEND tfl_gpu_srcs kernel/operation_traits.cc)
 list(APPEND tfl_gpu_srcs kernel/nnfw_operation_as_tflite_model.cc)
 list(APPEND tfl_gpu_srcs TensorBuilder.cc)
