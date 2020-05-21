@@ -27,9 +27,8 @@ namespace tfl_gpu
 {
 
 void TensorBuilder::registerTensorInfo(const ir::OperandIndex &ind, const ir::OperandInfo &info, ir::Layout backend_layout, bool as_const) {
-  _info_about_operands[ind] = std::make_shared<operand::Tensor>(info);
+  _info_about_operands[ind] = std::make_shared<operand::Tensor>(ind, info, as_const);
   _info_about_backend_layout[ind] = backend_layout;
-  _info_about_constants[ind] = as_const;
 }
 
 } // namespace tfl_gpu

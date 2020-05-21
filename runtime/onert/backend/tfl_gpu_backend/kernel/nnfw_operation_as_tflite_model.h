@@ -20,6 +20,8 @@
 #include "tensorflow/lite/model.h"
 #include "tensorflow/lite/version.h"
 
+#include "ir/Index.h"
+
 
 class NnfwOperationConverter
 {
@@ -28,15 +30,19 @@ class NnfwOperationConverter
   static constexpr uint32_t NO_NEED_CONSTANT_DATA = 0;
 
 public:
-  NnfwOperationConverter(const class OperationTraits& traits): operation_traits(traits) {}
-  std::unique_ptr<tflite::FlatBufferModel> generateTFLiteModel();
+  NnfwOperationConverter() {}
+  std::unique_ptr<tflite::FlatBufferModel> generateTFLiteModel(const class OperationTraits& operation_traits);
+  int32_t tensorIndexByOperandIndex(onert::ir::OperandIndex idx) {
+    // TODO add check that there is mapping between operand index in IR and tensor index in kernel
+    return operand_index_in_ir_to_tensor_index_in_kernel[idx];
+  }
 
 private:
-  void serializeTensors();
+  void serializeTensors(const class OperationTraits& operation_traits);
   int32_t serializeTensor(std::vector<int32_t> its_dimensions, uint32_t reference_to_constant_data);
-  int32_t serializeConstantData(const uint8_t* data, size_t size);
-  void serializeOperation();
-  void serializeOperationCode();
+  int32_t serializeConstantData(const class OperandTraits& operand_traits);
+  void serializeOperation(const class OperationTraits& operation_traits);
+  void serializeOperationCode(const class OperationTraits& operand_traits);
   void serializeEmptyBuffer();
 
   void treatAsOperationInput(int32_t reference_to_serialized_tensor);
@@ -65,8 +71,9 @@ private:
   std::unique_ptr<tflite::FlatBufferModel> getModel();
 
 private:
-  const class OperationTraits& operation_traits;
   flatbuffers::FlatBufferBuilder flat_buffer_builder;
+
+  std::unordered_map<onert::ir::OperandIndex, int32_t> operand_index_in_ir_to_tensor_index_in_kernel;
 
   std::vector<flatbuffers::Offset<tflite::Tensor>> serialized_tensors;
   std::vector<flatbuffers::Offset<tflite::Buffer>> serialized_constant_data;

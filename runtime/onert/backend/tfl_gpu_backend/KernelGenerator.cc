@@ -47,32 +47,40 @@ void KernelGenerator::visit(const ir::operation::Conv2D& node)
   OperationTraits operation_traits;
   operation_traits.setOperationSpecificTraits(node);
 
-  const auto ofm_index{node.getOutputs().at(0)};
-  if (_tensor_builder->isRegistered(ofm_index)) {
-    auto tensor = _tensor_builder->at(ofm_index);
-    operation_traits.addOutput({tensor->dimensions()});
+
+  for (size_t i = 0; i < node.getInputs().size(); ++i) {
+    auto operand_index_in_ir = node.getInputs().at(i);
+    if (!_tensor_builder->isRegistered(operand_index_in_ir)) {
+      std::logic_error("unregistered tensor detected");
+    }
+
+    auto tensor = _tensor_builder->at(operand_index_in_ir);
+    if (tensor->is_constant()) {
+      operation_traits.addConstantInput(OperandTraits::ForConstantFrom(tensor));
+    }
+    else {
+      operation_traits.addInput(OperandTraits::ForNonConstantFrom(tensor));
+    }
   }
-  else {
-    std::logic_error("unregistered tensor detected");
+
+  for (size_t i = 0; i < node.getOutputs().size(); ++i) {
+    auto operand_index_in_ir = node.getOutputs().at(i);
+    if (!_tensor_builder->isRegistered(operand_index_in_ir)) {
+      std::logic_error("unregistered tensor detected");
+    }
+    auto tensor = _tensor_builder->at(operand_index_in_ir);
+    operation_traits.addOutput(OperandTraits::ForNonConstantFrom(tensor));
   }
-  const auto ifm_index{node.getInputs().at(Conv2D::Input::INPUT)};
-  if (_tensor_builder->isRegistered(ifm_index)) {
-    auto tensor = _tensor_builder->at(ifm_index);
-    operation_traits.addInput({tensor->dimensions()});
-  }
-  else {
-    std::logic_error("unregistered tensor detected");
-  }
-  const auto ker_index{node.getInputs().at(Conv2D::Input::KERNEL)};
-  operation_traits.addConstantInput({_ctx.at(ker_index).shape().dims(), *_ctx.at(ker_index).data()});
-  const auto bias_index{node.getInputs().at(Conv2D::Input::BIAS)};
-  operation_traits.addConstantInput({_ctx.at(bias_index).shape().dims(), *_ctx.at(bias_index).data()});
 
   auto fn = std::make_unique<::onert::backend::tfl_gpu::kernel::Kernel>(operation_traits);
-  fn->shareBufferBetween(_tensor_builder->at(ifm_index), 0);
-  fn->shareBufferBetween(_tensor_builder->at(ker_index), 1);
-  fn->shareBufferBetween(_tensor_builder->at(bias_index), 2);
-  fn->shareBufferBetween(_tensor_builder->at(ofm_index), 3);
+  for (size_t i = 0; i < node.getInputs().size(); ++i) {
+    auto operand_index_in_ir = node.getInputs().at(i);
+    fn->shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
+  }
+  for (size_t i = 0; i < node.getOutputs().size(); ++i) {
+    auto operand_index_in_ir = node.getOutputs().at(i);
+    fn->shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
+  }
   _return_fn = std::move(fn);
 }
 

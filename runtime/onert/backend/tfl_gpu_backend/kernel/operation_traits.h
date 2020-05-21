@@ -17,6 +17,10 @@
 #ifndef NNFW_OPERATION_TRAITS_H
 #define NNFW_OPERATION_TRAITS_H
 
+#include "ir/Index.h"
+
+#include "../operand/Tensor.h"
+
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -37,6 +41,7 @@ class Operation;
 namespace flatbuffers {
 
 template<typename> class Offset;
+template<typename> class Vector;
 class FlatBufferBuilder;
 
 }
@@ -46,11 +51,17 @@ struct OperandTraits {
   using Dimensions = std::vector<dimension_t>;
 
   Dimensions dimensions;
-  const uint8_t* constant_data = nullptr;
-  size_t constant_data_size = 0;
+  onert::ir::OperandIndex index_in_nnfw_ir;
+  size_t size_of_place_for_constant_data = 0;
 
-  OperandTraits(const Dimensions& its_dimensions): dimensions(its_dimensions) {}
-  OperandTraits(const Dimensions& its_dimensions, const onert::ir::Data& const_data);
+  static OperandTraits ForConstantFrom(std::shared_ptr<onert::backend::tfl_gpu::operand::Tensor> tensor);
+  static OperandTraits ForNonConstantFrom(std::shared_ptr<onert::backend::tfl_gpu::operand::Tensor> tensor);
+
+  flatbuffers::Offset<flatbuffers::Vector<uint8_t>>
+  serializedPlaceForConstantData(flatbuffers::FlatBufferBuilder& flat_buffer_builder) const;
+
+private:
+  OperandTraits() = default;
 };
 
 class OperationTraits {

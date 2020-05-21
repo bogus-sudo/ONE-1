@@ -18,6 +18,7 @@
 #define NNFW_TFL_GPU_BACKEND_KERNEL_H
 
 #include <exec/IFunction.h>
+#include "ir/Index.h"
 
 #include "../operand/Tensor.h"
 
@@ -59,7 +60,7 @@ class Kernel: public onert::exec::IFunction {
 public:
   Kernel(const OperationTraits& operation_traits);
 
-  void shareBufferBetween(std::shared_ptr<operand::Tensor> external_tensor_presentation, uint64_t kernel_tensor_idx);
+  void shareBufferBetween(std::shared_ptr<operand::Tensor> external_tensor_presentation, onert::ir::OperandIndex index_in_ir);
 
   void run() final;
   void runSync() final { run(); }

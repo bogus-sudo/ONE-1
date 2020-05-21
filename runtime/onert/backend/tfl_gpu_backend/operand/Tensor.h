@@ -18,7 +18,8 @@
 #define NNFW_TFL_GPU_TENSOR_H
 
 #include <backend/ITensor.h>
-#include <ir/OperandInfo.h>
+#include "ir/OperandInfo.h"
+#include "ir/Index.h"
 
 namespace onert
 {
@@ -35,13 +36,12 @@ namespace operand
 class Tensor : public ITensor
 {
 public:
-  Tensor() = delete;
-
-public:
-  Tensor(const onert::ir::OperandInfo& info)
+  Tensor(onert::ir::OperandIndex external_idx, const onert::ir::OperandInfo& info, bool is_constant)
     : _dimensions(info.shape().dims())
     , _total_size(info.total_size())
+    , _external_idx(external_idx)
     , _type(info.typeInfo().type())
+    , _is_constant(is_constant)
   {}
 
 public:
@@ -66,12 +66,16 @@ public:
 
   void setBuffer(uint8_t* p) { _data = p; }
   const std::vector<int32_t>& dimensions() const { return _dimensions; }
+  onert::ir::OperandIndex external_index() const { return _external_idx; }
+  bool is_constant() const { return _is_constant; }
 
 private:
   std::vector<int32_t> _dimensions;
   size_t _total_size;
-  ir::DataType _type;
   uint8_t* _data = nullptr;
+  ir::OperandIndex _external_idx;
+  ir::DataType _type;
+  bool _is_constant;
 };
 
 } // namespace operand

@@ -38,8 +38,8 @@ namespace kernel
 Kernel::Kernel(const OperationTraits& operation_traits)
   : operation_resolver_(std::make_unique<tflite::ops::builtin::BuiltinOpResolver>())
 {
-  converter_ = std::make_unique<::NnfwOperationConverter>(operation_traits);
-  model_ = converter_->generateTFLiteModel();
+  converter_ = std::make_unique<::NnfwOperationConverter>();
+  model_ = converter_->generateTFLiteModel(operation_traits);
   tflite::InterpreterBuilder(*model_, *operation_resolver_)(&interpreter_);
   if (!interpreter_) {
     throw std::runtime_error("failed to construct interpreter\n");
@@ -58,8 +58,8 @@ void Kernel::run() {
   }
 }
 
-void Kernel::shareBufferBetween(std::shared_ptr<operand::Tensor> tensor, uint64_t idx) {
-  auto kernel_tensor = interpreter_->tensor(idx);
+void Kernel::shareBufferBetween(std::shared_ptr<operand::Tensor> tensor, onert::ir::OperandIndex index_in_ir) {
+  auto kernel_tensor = interpreter_->tensor(converter_->tensorIndexByOperandIndex(index_in_ir));
   tensor->setBuffer(reinterpret_cast<uint8_t*>(kernel_tensor->data.raw));
 }
 

@@ -60,7 +60,6 @@ public:
 private:
   std::unordered_map<ir::OperandIndex, std::shared_ptr<operand::Tensor>> _info_about_operands;
   std::unordered_map<ir::OperandIndex, ir::Layout> _info_about_backend_layout;
-  std::unordered_map<ir::OperandIndex, bool> _info_about_constants;
 };
 
 } // namespace tfl_gpu

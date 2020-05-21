@@ -18,17 +18,17 @@
 
 #include "operation_traits.h"
 
-std::unique_ptr<tflite::FlatBufferModel> NnfwOperationConverter::generateTFLiteModel() {
-  serializeTensors();
-  serializeOperation();
+std::unique_ptr<tflite::FlatBufferModel> NnfwOperationConverter::generateTFLiteModel(const OperationTraits& operation_traits) {
+  serializeTensors(operation_traits);
+  serializeOperation(operation_traits);
   constructSubgraphUsingSeralizedOperationAndTensors();
-  serializeOperationCode();
+  serializeOperationCode(operation_traits);
   constructSerializedModelFromParts();
 
   return getModel();
 }
 
-void NnfwOperationConverter::serializeTensors() {
+void NnfwOperationConverter::serializeTensors(const OperationTraits& operation_traits) {
   // by the rules of serializing TF Lite model, first buffer of constant data should be empty,
   // so all tensors which are not need constant data can use reference to that empty buffer
   serializeEmptyBuffer();
@@ -37,18 +37,21 @@ void NnfwOperationConverter::serializeTensors() {
     int32_t reference_to_serialized_tensor = serializeTensor(operator_traits.dimensions, NO_NEED_CONSTANT_DATA);
     treatAsOperationInput(reference_to_serialized_tensor);
     treatAsModelInput(reference_to_serialized_tensor);
+    operand_index_in_ir_to_tensor_index_in_kernel[operator_traits.index_in_nnfw_ir] = reference_to_serialized_tensor;
   }
 
   for (const auto& operator_traits: operation_traits.traits_of_constant_inputs) {
-    int32_t reference_to_serialized_data = serializeConstantData(operator_traits.constant_data, operator_traits.constant_data_size);
+    int32_t reference_to_serialized_data = serializeConstantData(operator_traits);
     int32_t reference_to_serialized_tensor = serializeTensor(operator_traits.dimensions, reference_to_serialized_data);
     treatAsOperationInput(reference_to_serialized_tensor);
+    operand_index_in_ir_to_tensor_index_in_kernel[operator_traits.index_in_nnfw_ir] = reference_to_serialized_tensor;
   }
 
   for (const auto& operator_traits: operation_traits.traits_of_outputs) {
     int32_t reference_to_serialized_tensor = serializeTensor(operator_traits.dimensions, NO_NEED_CONSTANT_DATA);
     treatAsOperationOutput(reference_to_serialized_tensor);
     treatAsModelOutput(reference_to_serialized_tensor);
+    operand_index_in_ir_to_tensor_index_in_kernel[operator_traits.index_in_nnfw_ir] = reference_to_serialized_tensor;
   }
 }
 
@@ -57,9 +60,9 @@ void NnfwOperationConverter::serializeEmptyBuffer() {
   serialized_constant_data.push_back(bb.Finish());
 }
 
-int32_t NnfwOperationConverter::serializeConstantData(const uint8_t* data, size_t size) {
+int32_t NnfwOperationConverter::serializeConstantData(const OperandTraits& operand_traits) {
   serialized_constant_data.push_back(
-    tflite::CreateBuffer(flat_buffer_builder, flat_buffer_builder.CreateVector(data, size)));
+    tflite::CreateBuffer(flat_buffer_builder, operand_traits.serializedPlaceForConstantData(flat_buffer_builder)));
 
   return serialized_constant_data.size() - 1;
 }
@@ -96,7 +99,7 @@ void NnfwOperationConverter::treatAsModelOutput(int32_t reference_to_serialized_
   references_to_serialized_model_outputs.push_back(reference_to_serialized_tensor);
 }
 
-void NnfwOperationConverter::serializeOperation() {
+void NnfwOperationConverter::serializeOperation(const OperationTraits& operation_traits) {
   serialized_operation =
       tflite::CreateOperator(
           flat_buffer_builder,
@@ -146,7 +149,7 @@ flatbuffers::Offset<flatbuffers::String> NnfwOperationConverter::serializedSubgr
   return flat_buffer_builder.CreateString("main");
 }
 
-void NnfwOperationConverter::serializeOperationCode() {
+void NnfwOperationConverter::serializeOperationCode(const OperationTraits& operation_traits) {
   serialized_operation_code = tflite::CreateOperatorCode(flat_buffer_builder, static_cast<tflite::BuiltinOperator>(operation_traits.operationCode()));
 
   // this because currently converter is currently used to convert only one operation to a model

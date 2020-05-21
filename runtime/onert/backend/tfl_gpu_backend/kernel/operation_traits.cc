@@ -334,11 +334,30 @@ void OperationSpecificTraitsProvider::visit(const onert::ir::operation::Softmax&
 }
 
 
-OperandTraits::OperandTraits(const Dimensions& its_dimensions, const onert::ir::Data& const_data)
-  : dimensions(its_dimensions)
-  , constant_data(const_data.base())
-  , constant_data_size(const_data.size())
-{}
+OperandTraits OperandTraits::ForConstantFrom(std::shared_ptr<onert::backend::tfl_gpu::operand::Tensor> tensor) {
+  OperandTraits traits;
+  traits.dimensions = tensor->dimensions();
+  traits.index_in_nnfw_ir = tensor->external_index();
+  traits.size_of_place_for_constant_data = tensor->total_size();
+  return traits;
+}
+
+OperandTraits OperandTraits::ForNonConstantFrom(std::shared_ptr<onert::backend::tfl_gpu::operand::Tensor> tensor) {
+  OperandTraits traits;
+  traits.dimensions = tensor->dimensions();
+  traits.index_in_nnfw_ir = tensor->external_index();
+  return traits;
+}
+
+flatbuffers::Offset<flatbuffers::Vector<uint8_t>>
+OperandTraits::serializedPlaceForConstantData(flatbuffers::FlatBufferBuilder& flat_buffer_builder) const {
+  // On this step we just create a place for constant data. This place will be filled later by ConstantInitializer
+  // TODO it seems like owning of raw pointer have been move to flat_buffer_builder, so we must not free allocated memory.
+  // TODO It is need to check it
+  // TODO check that it is actually traits of constant operand
+  uint8_t* place_for_constant_data = new uint8_t[size_of_place_for_constant_data];
+  return flat_buffer_builder.CreateVector(place_for_constant_data, size_of_place_for_constant_data);
+}
 
 
 OperationTraits::OperationTraits() = default;
