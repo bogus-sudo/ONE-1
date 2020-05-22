@@ -243,3 +243,49 @@ std::shared_ptr<onert::ir::Graph> makeModelWithTwoRhombsWithOneCommonEdge() {
 
   return graph;
 }
+
+std::shared_ptr<onert::ir::Graph> makeConv2dDepthwiseConv2dConv2dOperationsSequence() {
+  using OIS = onert::ir::OperandIndexSequence;
+
+  auto graph = std::make_shared<onert::ir::Graph>();
+  const onert::ir::TypeInfo float_type(onert::ir::DataType::FLOAT32);
+
+  auto in1 = graph->addOperand(onert::ir::Shape{1, 224, 224, 3}, float_type);
+  auto kernel1 = graph->addOperand(onert::ir::Shape{32, 3, 3, 3}, float_type);
+  auto bias1 = graph->addOperand(onert::ir::Shape{32}, float_type);
+  auto out1 = graph->addOperand(onert::ir::Shape{1, 112, 112, 32}, float_type);
+  onert::ir::operation::Conv2D::Param param1;
+  param1.padding.type = onert::ir::PaddingType::SAME;
+  param1.stride.vertical = 2;
+  param1.stride.horizontal = 2;
+  param1.activation = onert::ir::Activation::RELU6;
+  graph->addOperation(std::make_unique<onert::ir::operation::Conv2D>(OIS{in1, kernel1, bias1}, OIS{out1}, param1));
+
+  auto kernel2 = graph->addOperand(onert::ir::Shape{1, 3, 3, 32}, float_type);
+  auto bias2 = graph->addOperand(onert::ir::Shape{32}, float_type);
+  auto out2 = graph->addOperand(onert::ir::Shape{1, 112, 112, 32}, float_type);
+  onert::ir::operation::DepthwiseConv2D::Param param2;
+  param2.padding.type = onert::ir::PaddingType::SAME;
+  param2.stride.vertical = 1;
+  param2.stride.horizontal = 1;
+  param2.activation = onert::ir::Activation::RELU6;
+  param2.multiplier = 1;
+  graph->addOperation(std::make_unique<onert::ir::operation::DepthwiseConv2D>(OIS{out1, kernel2, bias2}, OIS{out2}, param2));
+
+  auto kernel3 = graph->addOperand(onert::ir::Shape{64, 1, 1, 32}, float_type);
+  auto bias3 = graph->addOperand(onert::ir::Shape{64}, float_type);
+  auto out3 = graph->addOperand(onert::ir::Shape{1, 112, 112, 64}, float_type);
+  onert::ir::operation::Conv2D::Param param3;
+  param3.padding.type = onert::ir::PaddingType::SAME;
+  param3.stride.vertical = 1;
+  param3.stride.horizontal = 1;
+  param3.activation = onert::ir::Activation::RELU6;
+  graph->addOperation(std::make_unique<onert::ir::operation::Conv2D>(OIS{out2, kernel3, bias3}, OIS{out3}, param3));
+
+  graph->addInput(in1);
+  graph->addOutput(out3);
+  graph->finishBuilding();
+
+  return graph;
+}
+

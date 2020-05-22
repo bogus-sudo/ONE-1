@@ -40,5 +40,6 @@ std::shared_ptr<onert::ir::Graph> makeModelWithJustOneAveragePool2dOperation();
 std::shared_ptr<onert::ir::Graph> makeModelWithJustOneSqueezeOperation();
 std::shared_ptr<onert::ir::Graph> makeModelWithJustOneSoftmaxOperation();
 std::shared_ptr<onert::ir::Graph> makeModelWithTwoRhombsWithOneCommonEdge();
+std::shared_ptr<onert::ir::Graph> makeConv2dDepthwiseConv2dConv2dOperationsSequence();
 
 #endif // NNFW_TEST_MODELS_H

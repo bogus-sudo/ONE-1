@@ -92,6 +92,86 @@ TEST_F(TflGpuBackendTest, model_with_just_one_DepthwiseConv2D_can_be_evalueated_
   }
 }
 
+//TEST_F(TflGpuBackendTest, tfl_gpu_backend_should_corretly_work_when_operations_before_and_after_calculated_on_another_backend) {
+//  auto nnfw_ir = makeConv2dDepthwiseConv2dConv2dOperationsSequence();
+//
+//  NNFWRuntime nnfw_runtime1;
+//  if (platform == "x86_64-linux") {
+//    nnfw_runtime1.doCalculationsUsingCpuBackend();
+//  }
+//  else {
+//    nnfw_runtime1.doCalculationsUsingAclNeonBackend();
+//  }
+//  nnfw_runtime1.loadGraph(nnfw_ir);
+//
+//  if (platform == "x86_64-linux") {
+//    setenv("OP_BACKEND_Conv2D", "cpu", 1);
+//    setenv("OP_BACKEND_DepthwiseConv2D", "tfl_gpu", 1);
+//  }
+//  else {
+//    std::cout << "we are here\n";
+//    setenv("OP_BACKEND_Conv2D", "cpu", 1);
+//    setenv("OP_BACKEND_DepthwiseConv2D", "acl_neon", 1);
+//  }
+//  NNFWRuntime nnfw_runtime2;
+//  nnfw_runtime2.loadGraph(nnfw_ir);
+//
+//  for (size_t i = 0; i < std::min(nnfw_runtime1.numberOfInputs(), nnfw_runtime2.numberOfInputs()); ++i) {
+//    auto data = randomData(std::min(nnfw_runtime1.sizeOfInput(i), nnfw_runtime2.sizeOfInput(i)));
+//    nnfw_runtime1.setDataForInput(i, data);
+//    nnfw_runtime2.setDataForInput(i, data);
+//  }
+//
+//  nnfw_runtime1.evaluate();
+//  nnfw_runtime2.evaluate();
+//
+//  ASSERT_TRUE(nnfw_runtime1.numberOfInputs() == nnfw_runtime2.numberOfInputs());
+//  for (size_t i = 0; i < nnfw_runtime1.numberOfInputs(); ++i) {
+//    ASSERT_TRUE(nnfw_runtime1.sizeOfInput(i) == nnfw_runtime2.sizeOfInput(i));
+//  }
+//  ASSERT_TRUE(nnfw_runtime1.numberOfOutputs() == nnfw_runtime2.numberOfOutputs());
+//  for (size_t i = 0; i < nnfw_runtime1.numberOfOutputs(); ++i) {
+//    ASSERT_TRUE(isAlmostEqual(nnfw_runtime1.getDataOfOutput(i), nnfw_runtime2.getDataOfOutput(i), 10e-5));
+//  }
+//}
+
+TEST_F(TflGpuBackendTest, tfl_gpu_backend_should_corretly_calculate_sequence_of_operations) {
+  auto nnfw_ir = makeConv2dDepthwiseConv2dConv2dOperationsSequence();
+
+  NNFWRuntime nnfw_runtime1;
+  if (platform == "x86_64-linux") {
+    nnfw_runtime1.doCalculationsUsingCpuBackend();
+  }
+  else {
+    nnfw_runtime1.doCalculationsUsingAclNeonBackend();
+  }
+  nnfw_runtime1.loadGraph(nnfw_ir);
+
+
+//  NNFWRuntime nnfw_runtime2;
+//  nnfw_runtime2.doCalculationsUsingTflGpuBackend();
+//  nnfw_runtime2.loadGraph(nnfw_ir);
+
+//  for (size_t i = 0; i < std::min(nnfw_runtime1.numberOfInputs(), nnfw_runtime2.numberOfInputs()); ++i) {
+//    auto data = randomData(std::min(nnfw_runtime1.sizeOfInput(i), nnfw_runtime2.sizeOfInput(i)));
+//    nnfw_runtime1.setDataForInput(i, data);
+//    nnfw_runtime2.setDataForInput(i, data);
+//  }
+
+  nnfw_runtime1.evaluate();
+//  nnfw_runtime2.evaluate();
+
+//  ASSERT_TRUE(nnfw_runtime1.numberOfInputs() == nnfw_runtime2.numberOfInputs());
+//  for (size_t i = 0; i < nnfw_runtime1.numberOfInputs(); ++i) {
+//    ASSERT_TRUE(nnfw_runtime1.sizeOfInput(i) == nnfw_runtime2.sizeOfInput(i));
+//  }
+//  ASSERT_TRUE(nnfw_runtime1.numberOfOutputs() == nnfw_runtime2.numberOfOutputs());
+//  for (size_t i = 0; i < nnfw_runtime1.numberOfOutputs(); ++i) {
+//    ASSERT_TRUE(isAlmostEqual(nnfw_runtime1.getDataOfOutput(i), nnfw_runtime2.getDataOfOutput(i), 10e-5));
+//  }
+}
+
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
