@@ -17,12 +17,16 @@
 #ifndef NNFW_TFL_GPU_BACKEND_KERNEL_H
 #define NNFW_TFL_GPU_BACKEND_KERNEL_H
 
-#include <exec/IFunction.h>
-#include "ir/Index.h"
 
 #include "../operand/Tensor.h"
 
+#include "exec/IFunction.h"
+#include "ir/Index.h"
+
+#include "tensorflow/lite/c/common.h"
+
 #include <memory>
+
 
 class OperationTraits;
 class NnfwOperationConverter;
@@ -72,8 +76,7 @@ private:
   std::unique_ptr<NnfwOperationConverter> converter_;
   std::unique_ptr<tflite::FlatBufferModel> model_;
   std::unique_ptr<tflite::ops::builtin::BuiltinOpResolver> operation_resolver_;
-  std::shared_ptr<operand::Tensor> _input;
-  std::shared_ptr<operand::Tensor> _output;
+  std::unique_ptr<TfLiteDelegate> gpu_delegate_;
 };
 
 } // namespace kernel

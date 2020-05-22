@@ -54,6 +54,7 @@ struct OperandTraits {
 
   Dimensions dimensions;
   onert::ir::OperandIndex index_in_nnfw_ir;
+  const uint8_t* place_for_constant_data = nullptr;
   size_t size_of_place_for_constant_data = 0;
 
   static OperandTraits ForConstantFrom(std::shared_ptr<onert::backend::tfl_gpu::operand::Tensor> tensor);

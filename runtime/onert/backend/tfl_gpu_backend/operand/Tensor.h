@@ -64,7 +64,7 @@ public:
   bool has_padding() const final { return false; }
   void access(const std::function<void(ITensor &tensor)> &fn) final { fn(*this); }
 
-  void setBuffer(uint8_t* p) { _data = p; }
+  void setBuffer(const uint8_t* p) { _data = (uint8_t*)(p); }
   const std::vector<int32_t>& dimensions() const { return _dimensions; }
   onert::ir::OperandIndex external_index() const { return _external_idx; }
   bool is_constant() const { return _is_constant; }

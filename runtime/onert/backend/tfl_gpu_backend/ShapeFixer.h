@@ -40,6 +40,7 @@ public:
   using IShapeFixer::visit;
 
   void visit(const ir::operation::Conv2D&) final {}
+  void visit(const ir::operation::DepthwiseConv2D&) final {}
 
 
 private:

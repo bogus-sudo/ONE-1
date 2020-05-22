@@ -56,6 +56,21 @@ void KernelGenerator::visit(const ir::operation::Conv2D& node)
   _return_fn = std::move(fn);
 }
 
+void KernelGenerator::visit(const ir::operation::DepthwiseConv2D& node)
+{
+  using ir::operation::Conv2D;
+
+  OperationTraits operation_traits;
+  operation_traits.setOperationSpecificTraits(std::make_unique<DepthwiseConv2dSpecificTraitsProvider>(node.param()));
+
+  configureInputsAndOutputs(node, operation_traits);
+
+  auto fn = std::make_unique<::onert::backend::tfl_gpu::kernel::Kernel>(operation_traits);
+  shareInternallyAllocatedBuffers(node, *fn);
+
+  _return_fn = std::move(fn);
+}
+
 void KernelGenerator::configureInputsAndOutputs(const onert::ir::Operation &node, OperationTraits &operation_traits) {
   for (size_t i = 0; i < node.getInputs().size(); ++i) {
     auto operand_index_in_ir = node.getInputs().at(i);
@@ -65,6 +80,12 @@ void KernelGenerator::configureInputsAndOutputs(const onert::ir::Operation &node
 
     auto tensor = _tensor_builder->at(operand_index_in_ir);
     if (tensor->is_constant()) {
+      // TODO Using constant data from IR directly is workaround
+      // TODO actually constant tensors should be initialized by ConstantInitializer, but
+      // TODO TF Lite GPU delegate loads constant data only once during memory allocation step
+      // TODO (see implementation of constructor of class Kernel in file kernel_initialization_on_aarch64_android_platform.cc).
+      // TODO It is bad idea because potentially this workaround breaks working with layers.
+      tensor->setBuffer(_ctx.at(operand_index_in_ir).data()->base());
       operation_traits.addConstantInput(OperandTraits::ForConstantFrom(tensor));
     }
     else {
@@ -85,7 +106,10 @@ void KernelGenerator::configureInputsAndOutputs(const onert::ir::Operation &node
 void KernelGenerator::shareInternallyAllocatedBuffers(const onert::ir::Operation& node, onert::backend::tfl_gpu::kernel::Kernel& fn) {
   for (size_t i = 0; i < node.getInputs().size(); ++i) {
     auto operand_index_in_ir = node.getInputs().at(i);
-    fn.shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
+    auto tensor = _tensor_builder->at(operand_index_in_ir);
+    if(!tensor->is_constant()) {
+      fn.shareBufferBetween(_tensor_builder->at(operand_index_in_ir), operand_index_in_ir);
+    }
   }
   for (size_t i = 0; i < node.getOutputs().size(); ++i) {
     auto operand_index_in_ir = node.getOutputs().at(i);

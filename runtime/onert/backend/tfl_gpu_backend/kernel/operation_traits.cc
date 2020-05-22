@@ -23,6 +23,7 @@ OperandTraits OperandTraits::ForConstantFrom(std::shared_ptr<onert::backend::tfl
   OperandTraits traits;
   traits.dimensions = tensor->dimensions();
   traits.index_in_nnfw_ir = tensor->external_index();
+  traits.place_for_constant_data = tensor->buffer();
   traits.size_of_place_for_constant_data = tensor->total_size();
   return traits;
 }
@@ -40,7 +41,6 @@ OperandTraits::serializedPlaceForConstantData(flatbuffers::FlatBufferBuilder& fl
   // TODO it seems like owning of raw pointer have been move to flat_buffer_builder, so we must not free allocated memory.
   // TODO It is need to check it
   // TODO check that it is actually traits of constant operand
-  uint8_t* place_for_constant_data = new uint8_t[size_of_place_for_constant_data];
   return flat_buffer_builder.CreateVector(place_for_constant_data, size_of_place_for_constant_data);
 }
 
