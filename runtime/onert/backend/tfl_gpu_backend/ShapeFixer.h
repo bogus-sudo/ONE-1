@@ -41,6 +41,7 @@ public:
 
   void visit(const ir::operation::Conv2D&) final {}
   void visit(const ir::operation::DepthwiseConv2D&) final {}
+  void visit(const ir::operation::AvgPool2D&) final {}
 
 
 private:

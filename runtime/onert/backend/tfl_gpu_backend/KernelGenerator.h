@@ -57,6 +57,7 @@ public:
 
   void visit(const ir::operation::Conv2D& node) final;
   void visit(const ir::operation::DepthwiseConv2D& node) final;
+  void visit(const ir::operation::AvgPool2D& node) final;
 
 private:
   void configureInputsAndOutputs(const onert::ir::Operation& node, OperationTraits& operation_traits);

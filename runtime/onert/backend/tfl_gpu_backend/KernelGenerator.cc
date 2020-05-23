@@ -43,8 +43,6 @@ void KernelGenerator::visit(const ir::OpSequence &operations_sequence)
 
 void KernelGenerator::visit(const ir::operation::Conv2D& node)
 {
-  using ir::operation::Conv2D;
-
   OperationTraits operation_traits;
   operation_traits.setOperationSpecificTraits(std::make_unique<Conv2dSpecificTraitsProvider>(node.param()));
 
@@ -58,10 +56,21 @@ void KernelGenerator::visit(const ir::operation::Conv2D& node)
 
 void KernelGenerator::visit(const ir::operation::DepthwiseConv2D& node)
 {
-  using ir::operation::Conv2D;
-
   OperationTraits operation_traits;
   operation_traits.setOperationSpecificTraits(std::make_unique<DepthwiseConv2dSpecificTraitsProvider>(node.param()));
+
+  configureInputsAndOutputs(node, operation_traits);
+
+  auto fn = std::make_unique<::onert::backend::tfl_gpu::kernel::Kernel>(operation_traits);
+  shareInternallyAllocatedBuffers(node, *fn);
+
+  _return_fn = std::move(fn);
+}
+
+void KernelGenerator::visit(const ir::operation::AvgPool2D& node)
+{
+  OperationTraits operation_traits;
+  operation_traits.setOperationSpecificTraits(std::make_unique<AvgPool2dSpecificTraitsProvider>(node.param()));
 
   configureInputsAndOutputs(node, operation_traits);
 
