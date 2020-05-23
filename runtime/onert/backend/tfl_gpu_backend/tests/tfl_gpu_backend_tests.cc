@@ -127,6 +127,41 @@ TEST_F(TflGpuBackendTest, model_with_just_one_AvgPool2D_operation_can_be_evaluea
   }
 }
 
+TEST_F(TflGpuBackendTest, model_with_just_one_Softmax_operation_can_be_evalueated_on_tfl_gpu_bakend) {
+  auto nnfw_ir = makeModelWithJustOneSoftmaxOperation();
+
+  NNFWRuntime nnfw_runtime1;
+  if (platform == "x86_64-linux") {
+    nnfw_runtime1.doCalculationsUsingCpuBackend();
+  }
+  else {
+    nnfw_runtime1.doCalculationsUsingAclNeonBackend();
+  }
+
+  nnfw_runtime1.loadGraph(nnfw_ir);
+  NNFWRuntime nnfw_runtime2;
+  nnfw_runtime2.doCalculationsUsingTflGpuBackend();
+  nnfw_runtime2.loadGraph(nnfw_ir);
+
+  for (size_t i = 0; i < std::min(nnfw_runtime1.numberOfInputs(), nnfw_runtime2.numberOfInputs()); ++i) {
+    auto data = randomData(std::min(nnfw_runtime1.sizeOfInput(i), nnfw_runtime2.sizeOfInput(i)));
+    nnfw_runtime1.setDataForInput(i, data);
+    nnfw_runtime2.setDataForInput(i, data);
+  }
+
+  nnfw_runtime1.evaluate();
+  nnfw_runtime2.evaluate();
+
+  ASSERT_TRUE(nnfw_runtime1.numberOfInputs() == nnfw_runtime2.numberOfInputs());
+  for (size_t i = 0; i < nnfw_runtime1.numberOfInputs(); ++i) {
+    ASSERT_TRUE(nnfw_runtime1.sizeOfInput(i) == nnfw_runtime2.sizeOfInput(i));
+  }
+  ASSERT_TRUE(nnfw_runtime1.numberOfOutputs() == nnfw_runtime2.numberOfOutputs());
+  for (size_t i = 0; i < nnfw_runtime1.numberOfOutputs(); ++i) {
+    ASSERT_TRUE(isAlmostEqual(nnfw_runtime1.getDataOfOutput(i), nnfw_runtime2.getDataOfOutput(i), 10e-5));
+  }
+}
+
 TEST_F(TflGpuBackendTest, tfl_gpu_backend_should_corretly_work_when_operations_before_and_after_calculated_on_another_backend) {
   auto nnfw_ir = makeConv2dDepthwiseConv2dConv2dOperationsSequence();
 

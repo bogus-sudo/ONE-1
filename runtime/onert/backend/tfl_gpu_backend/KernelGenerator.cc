@@ -80,6 +80,19 @@ void KernelGenerator::visit(const ir::operation::AvgPool2D& node)
   _return_fn = std::move(fn);
 }
 
+void KernelGenerator::visit(const ir::operation::Softmax& node)
+{
+  OperationTraits operation_traits;
+  operation_traits.setOperationSpecificTraits(std::make_unique<SoftmaxSpecificTraitsProvider>(node.param()));
+
+  configureInputsAndOutputs(node, operation_traits);
+
+  auto fn = std::make_unique<::onert::backend::tfl_gpu::kernel::Kernel>(operation_traits);
+  shareInternallyAllocatedBuffers(node, *fn);
+
+  _return_fn = std::move(fn);
+}
+
 void KernelGenerator::configureInputsAndOutputs(const onert::ir::Operation &node, OperationTraits &operation_traits) {
   for (size_t i = 0; i < node.getInputs().size(); ++i) {
     auto operand_index_in_ir = node.getInputs().at(i);
