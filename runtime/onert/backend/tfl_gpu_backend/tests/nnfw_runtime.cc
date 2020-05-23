@@ -35,12 +35,10 @@ void NNFWRuntime::doCalculationsUsingAclNeonBackend() {
 }
 
 void NNFWRuntime::doCalculationsUsingTflGpuBackend() {
-  std::cout << "set up tfl_gpu backend" << std::endl;
   setenv("OP_BACKEND_ALLOPS", "tfl_gpu", 1);
 }
 
 void NNFWRuntime::loadGraph(std::shared_ptr<onert::ir::Graph> new_graph) {
-  std::cout << "OP_BACKEND_ALLOPS: " << getenv("OP_BACKEND_ALLOPS") << std::endl;
   operations_graph_ = new_graph;
 
   auto subgs = std::make_shared<onert::ir::Subgraphs>();
