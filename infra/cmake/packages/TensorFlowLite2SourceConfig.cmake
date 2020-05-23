@@ -15,4 +15,5 @@ function(_TensorFlowLite2Source_import platform)
     set(TensorFlowLite2Source_FOUND ${tensorflow2-${platform}_SOURCE_GET} PARENT_SCOPE)
 endfunction(_TensorFlowLite2Source_import)
 
+set(platform ${TARGET_ARCH}.${TARGET_OS})
 _TensorFlowLite2Source_import(${platform})
