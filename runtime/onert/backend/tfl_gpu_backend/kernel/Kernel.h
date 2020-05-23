@@ -77,6 +77,7 @@ private:
   std::unique_ptr<tflite::FlatBufferModel> model_;
   std::unique_ptr<tflite::ops::builtin::BuiltinOpResolver> operation_resolver_;
   std::unique_ptr<TfLiteDelegate> gpu_delegate_;
+  std::vector<std::pair<TfLiteTensor*, const uint8_t*>> _internal_tensor_to_data_source_map;
 };
 
 } // namespace kernel

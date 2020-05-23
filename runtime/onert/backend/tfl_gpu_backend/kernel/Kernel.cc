@@ -31,6 +31,9 @@ namespace kernel
 {
 
 void Kernel::run() {
+  for (auto& tensor_to_data_source: _internal_tensor_to_data_source_map) {
+    memcpy(tensor_to_data_source.first->data.raw, tensor_to_data_source.second, tensor_to_data_source.first->bytes);
+  }
   if (interpreter_->Invoke() != kTfLiteOk) {
     throw std::runtime_error("Failed to invoke tflite!\n");
   }
@@ -38,7 +41,20 @@ void Kernel::run() {
 
 void Kernel::shareBufferBetween(std::shared_ptr<operand::Tensor> tensor, onert::ir::OperandIndex index_in_ir) {
   auto kernel_tensor = interpreter_->tensor(converter_->tensorIndexByOperandIndex(index_in_ir));
-  tensor->setBuffer(reinterpret_cast<uint8_t*>(kernel_tensor->data.raw));
+
+  // TODO Because we cannot manage memory inside TF Lite interpreter, we should give an access to input and output data
+  // TODO for external environment
+  // TODO Can be two cases:
+  // TODO 1) buffer for data already allocated by external environment.
+  // TODO    In that case we should keep pointer to those buffer and copy data from it before do calculations.
+  // TODO 2) buffer for data have not been allocated by external environment.
+  // TODO    In that case we should give an access to buffer allocated by TF Lite interpreter fot external environment
+  if (tensor->buffer()) {
+    _internal_tensor_to_data_source_map.push_back({kernel_tensor, tensor->buffer()});
+  }
+  else {
+    tensor->setBuffer(reinterpret_cast<uint8_t *>(kernel_tensor->data.raw));
+  }
 }
 
 
