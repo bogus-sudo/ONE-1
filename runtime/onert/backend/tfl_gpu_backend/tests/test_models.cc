@@ -284,6 +284,19 @@ std::shared_ptr<onert::ir::Graph> makeConv2dDepthwiseConv2dConv2dOperationsSeque
 
   graph->addInput(in1);
   graph->addOutput(out3);
+
+  auto kernel1_data = randomData(graph->operands().at(kernel1).shape().num_elements());
+  graph->setOperandValue(kernel1, std::make_shared<onert::ir::CachedData>(reinterpret_cast<uint8_t*>(kernel1_data.data()), kernel1_data.size() * sizeof(float)));
+  auto bias1_data = randomData(graph->operands().at(bias1).shape().num_elements());
+  graph->setOperandValue(bias1, std::make_shared<onert::ir::CachedData>(reinterpret_cast<uint8_t*>(bias1_data.data()), bias1_data.size() * sizeof(float)));
+  auto kernel2_data = randomData(graph->operands().at(kernel2).shape().num_elements());
+  graph->setOperandValue(kernel2, std::make_shared<onert::ir::CachedData>(reinterpret_cast<uint8_t*>(kernel2_data.data()), kernel2_data.size() * sizeof(float)));
+  auto bias2_data = randomData(graph->operands().at(bias2).shape().num_elements());
+  graph->setOperandValue(bias2, std::make_shared<onert::ir::CachedData>(reinterpret_cast<uint8_t*>(bias2_data.data()), bias2_data.size() * sizeof(float)));
+  auto kernel3_data = randomData(graph->operands().at(kernel3).shape().num_elements());
+  graph->setOperandValue(kernel3, std::make_shared<onert::ir::CachedData>(reinterpret_cast<uint8_t*>(kernel3_data.data()), kernel3_data.size() * sizeof(float)));
+  auto bias3_data = randomData(graph->operands().at(bias3).shape().num_elements());
+  graph->setOperandValue(bias3, std::make_shared<onert::ir::CachedData>(reinterpret_cast<uint8_t*>(bias3_data.data()), bias3_data.size() * sizeof(float)));
   graph->finishBuilding();
 
   return graph;
